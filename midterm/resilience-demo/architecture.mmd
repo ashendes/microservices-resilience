@@ -1,0 +1,84 @@
+graph TB
+    %% Client Layer
+    subgraph ClientLayer["Client Layer"]
+        Client[Client/Locust]
+    end
+    
+    %% Load Balancer
+    ALB[AWS Application Load Balancer]
+    
+    %% AWS ECS Cluster
+    subgraph ECS["AWS ECS Cluster"]
+        
+        %% Services Row
+        subgraph Services["Microservices"]
+            direction LR
+            
+            subgraph OrderSvc["Order Service Container"]
+                direction TB
+                OS[Order Service<br/>Handler]
+                
+                subgraph Patterns["Resilience Patterns"]
+                    direction LR
+                    INV_CB[Inventory CB]
+                    PAY_CB[Payment CB]
+                end
+                
+                subgraph Bulkheads["Bulkheads"]
+                    direction LR
+                    INV_BH[Inventory BH]
+                    PAY_BH[Payment BH]
+                end
+            end
+            
+            INV_SVC[Inventory<br/>Service]
+            PAY_SVC[Payment<br/>Service]
+        end
+        
+        %% Monitoring Stack
+        subgraph Monitoring["Monitoring Stack"]
+            direction LR
+            PROMETHEUS[Prometheus]
+            GRAFANA[Grafana]
+        end
+    end
+    
+    %% Client to Load Balancer
+    ClientLayer --> ALB
+    
+    %% Load Balancer to Services
+    ALB --> OS
+    ALB --> INV_SVC
+    ALB --> PAY_SVC
+    ALB --> GRAFANA
+    
+    %% Order Service Internal Flow
+    OS --> INV_CB
+    OS --> PAY_CB
+    INV_CB --> INV_BH
+    PAY_CB --> PAY_BH
+    
+    %% Service-to-Service Communication
+    INV_BH -.->|HTTP| INV_SVC
+    PAY_BH -.->|HTTP| PAY_SVC
+    
+    %% Metrics Collection
+    PROMETHEUS -.->|scrape /metrics| OS
+    PROMETHEUS -.->|scrape /metrics| INV_SVC
+    PROMETHEUS -.->|scrape /metrics| PAY_SVC
+    
+    %% Monitoring Connection
+    PROMETHEUS --> GRAFANA
+    
+    %% Light Theme Styling
+    classDef client fill:#bbdefb,stroke:#2196f3,stroke-width:3px,color:#1565c0
+    classDef lb fill:#fff9c4,stroke:#fbc02d,stroke-width:3px,color:#f57f17
+    classDef service fill:#e1bee7,stroke:#9c27b0,stroke-width:2px,color:#4a148c
+    classDef pattern fill:#ffcdd2,stroke:#e53935,stroke-width:2px,color:#b71c1c
+    classDef monitoring fill:#c8e6c9,stroke:#66bb6a,stroke-width:2px,color:#2e7d32
+    
+    class Client client
+    class ALB lb
+    class OS,INV_SVC,PAY_SVC service
+    class INV_CB,PAY_CB,INV_BH,PAY_BH pattern
+    class PROMETHEUS,GRAFANA monitoring

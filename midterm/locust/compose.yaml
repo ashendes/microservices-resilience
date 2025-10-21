@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  # Master node that coordinates load testing and serves the web UI
+  master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"  # Expose Locust web UI port
+    volumes:
+      - ./:/mnt/locust  # Mount local directory to access test scripts
+    command: 
+      -f /mnt/locust/locustfile.py 
+      --master 
+      --host=http://${DNS_NAME}
+      --users=${USERS:-5}
+      --spawn-rate=${SPAWN_RATE:-1}
+      --run-time=${RUN_TIME:-120s}
+      
+    networks:
+      - locust-network
+  
+  # Worker nodes that execute the actual load testing
+  worker:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust  # Mount local directory to access test scripts
+    command: 
+      -f /mnt/locust/locustfile.py 
+      --worker 
+      --master-host master
+    networks:
+      - locust-network
+
+# External network for communication between containers
+networks:
+  locust-network:
+    external: true

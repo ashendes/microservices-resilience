@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'order-service'
+    static_configs:
+      - targets: ['order-service:8080']
+        labels:
+          service: 'order-service'
+
+  - job_name: 'inventory-service'
+    static_configs:
+      - targets: ['inventory-service:8081']
+        labels:
+          service: 'inventory-service'
+
+  - job_name: 'payment-service'
+    static_configs:
+      - targets: ['payment-service:8082']
+        labels:
+          service: 'payment-service'
+
