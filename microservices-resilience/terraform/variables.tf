@@ -7,7 +7,7 @@ variable "aws_region" {
 # Base service name (will be prefixed to all services)
 variable "service_name" {
   type    = string
-  default = "hw7-resilience"
+  default = "microservices-resilience"
 }
 
 # ECS settings for all services
@@ -23,6 +23,13 @@ variable "log_retention_days" {
   default = 7
 }
 
+# Existing IAM role name for ECS tasks
+variable "ecs_task_role_name" {
+  type        = string
+  default     = "ecsTaskExecutionRole"
+  description = "Name of an existing IAM role for ECS tasks"
+}
+
 # Resource allocation per service
 variable "cpu" {
   type        = string
@@ -34,4 +41,17 @@ variable "memory" {
   type        = string
   default     = "1024"
   description = "Memory in MiB (512, 1024, 2048, 3072, 4096)"
+}
+
+# Grafana admin credentials (set via tfvars or environment)
+variable "grafana_admin_user" {
+  type        = string
+  default     = "change-me"
+  description = "Grafana admin username"
+}
+
+variable "grafana_admin_password" {
+  type        = string
+  default     = "change-me"
+  description = "Grafana admin password"
 }

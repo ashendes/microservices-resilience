@@ -28,15 +28,6 @@ output "prometheus_url" {
   value       = "http://${aws_lb.shared.dns_name}:9090"
 }
 
-output "grafana_credentials" {
-  description = "Grafana login credentials"
-  value = {
-    username = "admin"
-    password = "admin"
-  }
-  sensitive = false
-}
-
 output "ecs_cluster_name" {
   description = "Name of the shared ECS cluster"
   value       = aws_ecs_cluster.shared.name
@@ -71,7 +62,5 @@ output "monitoring_stack" {
   value = {
     grafana_url    = "http://${aws_lb.shared.dns_name}:3000"
     prometheus_url = "http://${aws_lb.shared.dns_name}:9090"
-    username       = "admin"
-    password       = "admin"
   }
 }

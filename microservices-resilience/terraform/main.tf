@@ -7,7 +7,7 @@ module "network" {
   container_port = 8080  # Base port, actual services use 8080-8082
 }
 
-# Service Discovery disabled due to AWS Academy permission restrictions
+# Service discovery disabled due to restricted permissions
 # Using internal ALBs instead for service-to-service communication
 
 # Shared ECS Cluster for all microservices
@@ -16,8 +16,8 @@ resource "aws_ecs_cluster" "shared" {
 }
 
 # Reuse an existing IAM role for ECS tasks
-data "aws_iam_role" "lab_role" {
-  name = "LabRole"
+data "aws_iam_role" "ecs_task_role" {
+  name = var.ecs_task_role_name
 }
 
 # Single ALB for all services
@@ -207,8 +207,8 @@ module "ecs_inventory" {
   container_port     = 8081
   subnet_ids         = module.network.subnet_ids
   security_group_ids = [module.network.security_group_id]
-  execution_role_arn = data.aws_iam_role.lab_role.arn
-  task_role_arn      = data.aws_iam_role.lab_role.arn
+  execution_role_arn = data.aws_iam_role.ecs_task_role.arn
+  task_role_arn      = data.aws_iam_role.ecs_task_role.arn
   log_group_name     = module.logging_inventory.log_group_name
   ecs_count          = var.ecs_count
   cpu                = var.cpu
@@ -260,8 +260,8 @@ module "ecs_payment" {
   container_port     = 8082
   subnet_ids         = module.network.subnet_ids
   security_group_ids = [module.network.security_group_id]
-  execution_role_arn = data.aws_iam_role.lab_role.arn
-  task_role_arn      = data.aws_iam_role.lab_role.arn
+  execution_role_arn = data.aws_iam_role.ecs_task_role.arn
+  task_role_arn      = data.aws_iam_role.ecs_task_role.arn
   log_group_name     = module.logging_payment.log_group_name
   ecs_count          = var.ecs_count
   cpu                = var.cpu
@@ -313,8 +313,8 @@ module "ecs_order" {
   container_port     = 8080
   subnet_ids         = module.network.subnet_ids
   security_group_ids = [module.network.security_group_id]
-  execution_role_arn = data.aws_iam_role.lab_role.arn
-  task_role_arn      = data.aws_iam_role.lab_role.arn
+  execution_role_arn = data.aws_iam_role.ecs_task_role.arn
+  task_role_arn      = data.aws_iam_role.ecs_task_role.arn
   log_group_name     = module.logging_order.log_group_name
   ecs_count          = var.ecs_count
   cpu                = var.cpu
@@ -359,13 +359,6 @@ resource "docker_registry_image" "order" {
 # MONITORING STACK
 # ========================================
 
-# Prometheus configuration with ALB DNS substituted
-# locals {
-#   prometheus_config = templatefile("${path.module}/prometheus-config.yml", {
-#     alb_dns_name = aws_lb.shared.dns_name
-#   })
-# }
-
 # ECR repository for custom Grafana image
 module "ecr_grafana" {
   source          = "./modules/ecr"
@@ -391,8 +384,8 @@ resource "aws_ecs_task_definition" "prometheus" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = data.aws_iam_role.lab_role.arn
-  task_role_arn            = data.aws_iam_role.lab_role.arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_role.arn
+  task_role_arn            = data.aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([{
     name      = "${var.service_name}-prometheus"
@@ -481,8 +474,8 @@ resource "aws_ecs_task_definition" "grafana" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = data.aws_iam_role.lab_role.arn
-  task_role_arn            = data.aws_iam_role.lab_role.arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_role.arn
+  task_role_arn            = data.aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([{
     name      = "${var.service_name}-grafana"
@@ -492,11 +485,11 @@ resource "aws_ecs_task_definition" "grafana" {
     environment = [
       {
         name  = "GF_SECURITY_ADMIN_PASSWORD"
-        value = "admin"
+        value = var.grafana_admin_password
       },
       {
         name  = "GF_SECURITY_ADMIN_USER"
-        value = "admin"
+        value = var.grafana_admin_user
       },
       {
         name  = "GF_USERS_ALLOW_SIGN_UP"
