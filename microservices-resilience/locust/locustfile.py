@@ -1,7 +1,10 @@
-from locust import FastHttpUser, task, between
 import random
 
+from locust import FastHttpUser, task, between
+
+
 class OrderServiceUser(FastHttpUser):
+    """Simulates user traffic for order creation and retrieval."""
     wait_time = between(0.25, 1)
     # Store created order IDs for retrieval
     order_ids = []

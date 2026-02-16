@@ -473,35 +473,3 @@ class ChaosController:
         logger.info("✅ Combined chaos enabled")
 
 
-if __name__ == "__main__":
-    """
-    Example usage scenarios:
-    
-    # Normal operation test
-    locust -f locustfile.py --host http://localhost:8080 --users 50 --spawn-rate 5 -t 120s
-    
-    # Fail fast validation test
-    locust -f locustfile.py --host http://localhost:8080 --user-classes FailFastUser --users 20 --spawn-rate 5 -t 60s
-    
-    # Circuit breaker test (enable inventory chaos first)
-    # curl -X POST http://localhost:8081/chaos/inventory/enable
-    locust -f locustfile.py --host http://localhost:8080 --user-classes CircuitBreakerInventoryUser --users 30 --spawn-rate 3 -t 180s
-    
-    # Bulkhead test (enable payment slow mode first)
-    # curl -X POST http://localhost:8082/chaos/payment/slow
-    locust -f locustfile.py --host http://localhost:8080 --user-classes BulkheadUser --users 20 --spawn-rate 20 -t 60s
-    
-    # Combined chaos test (enable all chaos modes first)
-    # curl -X POST http://localhost:8081/chaos/inventory/enable
-    # curl -X POST http://localhost:8081/chaos/inventory/slow
-    # curl -X POST http://localhost:8082/chaos/payment/enable
-    # curl -X POST http://localhost:8082/chaos/payment/slow
-    locust -f locustfile.py --host http://localhost:8080 --user-classes CombinedChaosUser --users 40 --spawn-rate 5 -t 300s
-    
-    # Mixed workload with step load
-    locust -f locustfile.py --host http://localhost:8080 --user-classes MixedWorkloadUser --shape StepLoadShape
-    
-    # Spike load test
-    locust -f locustfile.py --host http://localhost:8080 --user-classes MixedWorkloadUser --shape SpikeLoadShape
-    """
-    print(__doc__)
